@@ -1,0 +1,8 @@
+node_modules/
+.next/
+build/
+next-build-output/
+demo-store.json
+.env
+.env.*
+!.env.example

@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id          String       @id @default(uuid())
+  name        String
+  createdAt   DateTime     @default(now())
+  locations   Location[]
+  users       User[]
+  suggestions Suggestion[]
+  orders      Order[]
+}
+
+model Lead {
+  id         String   @id @default(uuid())
+  name       String
+  restaurant String
+  email      String
+  zipcode    String?
+  createdAt  DateTime @default(now())
+}
+
+model TeamInvite {
+  id           String   @id @default(uuid())
+  restaurantId String?
+  email        String
+  role         Role     @default(staff)
+  status       String   @default("pending")
+  createdAt    DateTime @default(now())
+}
+
+model Location {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  name         String
+  zipcode      String
+  timezone     String     @default("America/Los_Angeles")
+  menuItems    MenuItem[]
+  orders       Order[]
+}
+
+model User {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  email        String
+  role         Role
+  approvals    Approval[]
+}
+
+model MenuItem {
+  id           String    @id @default(uuid())
+  restaurantId String
+  locationId   String?
+  name         String
+  category     String?
+  priceCents   Int
+  availability String    @default("available")
+  location     Location? @relation(fields: [locationId], references: [id])
+}
+
+model BenchmarkSnapshot {
+  id           String   @id @default(uuid())
+  restaurantId String
+  zipcode      String
+  payload      Json
+  refreshedAt  DateTime @default(now())
+}
+
+model Suggestion {
+  id           String     @id @default(uuid())
+  restaurantId String
+  kind         String
+  title        String
+  reason       String
+  impact       Json?
+  status       String     @default("pending")
+  createdAt    DateTime   @default(now())
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  approvals    Approval[]
+}
+
+model Approval {
+  id           String      @id @default(uuid())
+  restaurantId String
+  suggestionId String?
+  decidedById  String?
+  decision     String
+  decidedAt    DateTime    @default(now())
+  suggestion   Suggestion? @relation(fields: [suggestionId], references: [id])
+  decidedBy    User?       @relation(fields: [decidedById], references: [id])
+}
+
+model Order {
+  id           String     @id @default(uuid())
+  restaurantId String
+  locationId   String?
+  channel      String
+  status       String
+  totalCents   Int
+  createdAt    DateTime   @default(now())
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  location     Location?  @relation(fields: [locationId], references: [id])
+}
+
+enum Role {
+  owner
+  manager
+  staff
+  marginly_team
+}
